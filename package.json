@@ -1,0 +1,17 @@
+{
+  "name": "buzz-in",
+  "version": "1.0.0",
+  "description": "A small web application which allows teams to buzz in for questions",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CDogg99/buzz-in.git"
+  },
+  "author": "CDogg99",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CDogg99/buzz-in/issues"
+  },
+  "homepage": "https://github.com/CDogg99/buzz-in#readme"
+}
