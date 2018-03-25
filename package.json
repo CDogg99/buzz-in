@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "A small web application which allows teams to buzz in for questions",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "nodemon": "nodemon"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CDogg99/buzz-in.git"
@@ -19,6 +21,7 @@
     "cors": "^2.8.4",
     "express": "^4.16.3",
     "jsonwebtoken": "^8.2.0",
-    "mongodb": "^3.0.5"
+    "mongodb": "^3.0.5",
+    "nodemon": "^1.17.2"
   }
 }
