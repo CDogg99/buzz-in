@@ -13,5 +13,12 @@
   "bugs": {
     "url": "https://github.com/CDogg99/buzz-in/issues"
   },
-  "homepage": "https://github.com/CDogg99/buzz-in#readme"
+  "homepage": "https://github.com/CDogg99/buzz-in#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "jsonwebtoken": "^8.2.0",
+    "mongodb": "^3.0.5"
+  }
 }
