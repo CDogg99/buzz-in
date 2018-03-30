@@ -2,9 +2,9 @@ const util = {
     /**
      * Generates a random string ID
      * @param {Number} length 
-     * @return {String}
+     * @return {Promise<String>}
      */
-    generateId(length){
+    async generateId(length){
         const selection = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
         let id = "";
         for(let i = 0; i < length; i++){
@@ -16,9 +16,9 @@ const util = {
 
     /**
      * Generates a random access code 6 characters long
-     * @return {String}
+     * @return {Promise<String>}
      */
-    generateAccessCode(){
+    async generateAccessCode(){
         const selection = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         let code = "";
         for(let i = 0; i < 6; i++){

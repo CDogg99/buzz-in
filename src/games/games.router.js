@@ -5,102 +5,101 @@ const jwt = require("jsonwebtoken");
 const config = require("../../config/config");
 const gamesController = require("./games.controller");
 const util = require("../util");
-const types = require("../types");
+require("../types");
 
 //Allows player to place themselves in a team
-router.put("/team/join", (req, res)=>{
-    if(req.user === null || !req.user.playerId || !req.user.accessCode){
+router.put("/:accessCode/:teamId", async (req, res)=>{
+    if(req.user === null || req.user.gameId){
         return res.json({error: "Not authorized"});
     }
-    let teamId = req.body.teamId;
-    if(!teamId){
-        return res.json({error: "Team ID not set"});
+    let accessCode = req.params.accessCode;
+    let teamId = req.params.teamId;
+    let result;
+    try {
+        result = await gamesController.movePlayerToTeam(accessCode, teamId, req.user.playerId, req.user.name);
+    } catch (e) {
+        return res.json({error: e.message});
     }
-    gamesController.addPlayerToTeam(req.user.accessCode, teamId, req.user.playerId, (err, result)=>{
-        if(err){
-            return res.json({error: err.message});
-        }
-        if(result.modifiedCount == 1){
-            res.json({success: true, message: "Updated 1 document"});
-        }
-        else{
-            res.json({success: false, message: "Updated 0 documents"});
-        }
-    });
+    if(result.modifiedCount > 0){
+        return res.json({success: true, message: `Updated ${result.modifiedCount} document`});
+    }
+    else{
+        return res.json({error: "Updated 0 documents"});
+    }
 });
 
 //Allows player to join a game
-router.post("/join", (req, res)=>{
-    let accessCode = req.body.accessCode;
-    if(!accessCode){
-        return res.json({error: "Access code not set"});
+router.post("/:accessCode", async (req, res)=>{
+    let name = req.body.name;
+    if(!name || name === ""){
+        return res.json({error: "Name not set"});
     }
-    gamesController.get(accessCode, (err, result)=>{
-        if(err){
-            return res.json({error: err.message});
+    let accessCode = req.params.accessCode;
+    /**
+     * @type {Game}
+     */
+    let game;
+    try {
+        game = await gamesController.get(accessCode);
+    } catch (e) {
+        return res.json({error: e.message});
+    }
+    if(!game){
+        return res.json({error: "Game not found"});
+    }
+    let payload = {
+        playerId: await util.generateId(16),
+        name: name
+    };
+    let options = {
+        expiresIn: "24h"
+    };
+    let token = jwt.sign(payload, config.jwt.secret, options);
+    game._id = undefined;
+    game.id = undefined;
+    for(let i = 0; i < game.teams.length; i++){
+        let curPlayers = game.teams[i].players;
+        for(let f = 0; f < curPlayers.length; f++){
+            curPlayers[f].id = undefined;
         }
-        /**
-         * @type {Game}
-         */
-        let game = result;
-        let payload = {
-            playerId: util.generateId(16),
-            accessCode: game.accessCode
-        };
-        let options = {
-            expiresIn: "24h"
-        };
-        jwt.sign(payload, config.jwt.secret, options, (err, token)=>{
-            if(err){
-                return res.json({error: err.message});
-            }
-            game._id = undefined;
-            game.id = undefined;
-            for(let i = 0; i < game.teams.length; i++){
-                game.teams[i].players = undefined;
-            }
-            res.json({
-                token: token,
-                game: game
-            });
-        });
+    }
+    return res.json({
+        token: token,
+        game: game
     });
 });
 
 //Creates a new game
-router.post("/", (req, res)=>{
+router.post("/", async (req, res)=>{
     let teams = req.body.teams;
     if(!teams){
         return res.json({error: "Teams not set"});
     }
-    gamesController.create(teams, (err, result)=>{
-        if(err){
-            return res.json({error: err.message});
-        }
-        else if(result.insertedCount < 1){
-            return res.json({error: "Failed to insert document"});
-        }
-        /**
-         * @type {Game}
-         */
-        let game = result.ops[0];
-        let payload = {
-            gameId: game.id
-        };
-        let options = {
-            expiresIn: "24h"
-        };
-        jwt.sign(payload, config.jwt.secret, options, (err, token)=>{
-            if(err){
-                return res.json({error: err.message});
-            }
-            game._id = undefined;
-            game.id = undefined;
-            res.json({
-                token: token,
-                game: game
-            });
-        });
+    let result;
+    try {
+        result = await gamesController.create(teams);
+    } catch (e) {
+        return res.json({error: e.message});
+    }
+    if(result.insertedCount < 1){
+        return res.json({error: "Failed to insert document"});
+    }
+    /**
+     * @type {Game}
+     */
+    let game = result.ops[0];
+    let payload = {
+        gameId: game.id
+    };
+    let options = {
+        expiresIn: "24h"
+    };
+    let token = jwt.sign(payload, config.jwt.secret, options);
+    game._id = undefined;
+    game.id = undefined;
+    return res.json({
+        token: token,
+        game: game
     });
 });
 

@@ -1,122 +1,123 @@
 const mongo = require("../mongo");
 const util = require("../util");
-const types = require("../types");
+require("../types");
 
 const gamesController = {
     /**
+     * Creates a new game object and saves it to the database
      * @param {Team[]} teams
-     * @param {Function} callback
      */
-    create(teams, callback){
-        mongo.getConnection((err, db)=>{
-            if(err){
-                return callback(err, null);
-            }
-            db.collection("games", (err, collection)=>{
-                if(err){
-                    return callback(err, null);
-                }
-                for(let i = 0; i < teams.length; i++){
-                    teams[i].id = util.generateId(16);
-                    teams[i].name = teams[i].name || "";
-                    teams[i].players = [];
-                    teams[i].points = 0;
-                }
-                /**
-                 * @type {Game}
-                 */
-                let game = {
-                    id: util.generateId(16),
-                    accessCode: util.generateAccessCode(),
-                    teams: teams
-                };
-                collection.insertOne(game, (err, result)=>{
-                    if(err){
-                        return callback(err, null);
-                    }
-                    callback(null, result);
-                });
-            });
-        });
+    async create(teams){
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
+        for(let i = 0; i < teams.length; i++){
+            teams[i].id = await util.generateId(16);
+            teams[i].name = teams[i].name || "";
+            teams[i].players = [];
+            teams[i].points = 0;
+        }
+        /**
+         * @type {Game}
+         */
+        let game = {
+            id: await util.generateId(16),
+            accessCode: await util.generateAccessCode(),
+            teams: teams
+        };
+        let result;
+        try {
+            result = await collection.insertOne(game);
+        } catch (e) {
+            throw e;
+        }
+        return result;
     },
 
     /**
-     * @param {String} accessCode 
-     * @param {Function} callback
+     * Gets the game with the given access code
+     * @param {String} accessCode
      */
-    get(accessCode, callback){
-        mongo.getConnection((err, db)=>{
-            if(err){
-                return callback(err, null);
-            }
-            db.collection("games", (err, collection)=>{
-                if(err){
-                    return callback(err, null);
-                }
-                let query = {
-                    accessCode: accessCode
-                };
-                collection.findOne(query, (err, result)=>{
-                    if(err){
-                        return callback(err, null);
-                    }
-                    callback(null, result);
-                });
-            });
-        });
+    async get(accessCode){
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
+        let query = {
+            accessCode: accessCode
+        };
+        let result;
+        try {
+            result = await collection.findOne(query);
+        } catch (e) {
+            throw e;
+        }
+        return result;
     },
 
     /**
+     * Moves a player to the given team
      * @param {String} accessCode
      * @param {String} teamId 
      * @param {String} playerId
-     * @param {Function} callback 
+     * @param {String} playerName
      */
-    addPlayerToTeam(accessCode, teamId, playerId, callback){
-        this.get(accessCode, (err, result)=>{
-            if(err){
-                return callback(err, null);
-            }
-            /**
-             * @type {Game}
-             */
-            let game = result;
-            let onTeamAlready = false;
-            for(let i = 0; i < game.teams.length; i++){
-                let curPlayers = game.teams[i].players;
-                if(curPlayers.indexOf(playerId) > -1){
-                    onTeamAlready = true;
+    async movePlayerToTeam(accessCode, teamId, playerId, playerName){
+        /**
+         * @type {Game}
+         */
+        let game;
+        try {
+            game = await this.get(accessCode);
+        } catch (e) {
+            throw e;
+        }
+        for(let i = 0; i < game.teams.length; i++){
+            let curPlayers = game.teams[i].players;
+            for(let f = 0; f < curPlayers.length; f++){
+                let curPlayer = curPlayers[f];
+                if(curPlayer.id == playerId){
+                    curPlayers.splice(f, 1);
                     break;
                 }
             }
-            if(!onTeamAlready){
-                for(let i = 0; i < game.teams.length; i++){
-                    let curTeam = game.teams[i];
-                    if(curTeam.id == teamId){
-                        game.teams[i].players.push(playerId);
-                    }
-                }
+        }
+        for(let i = 0; i < game.teams.length; i++){
+            if(game.teams[i].id == teamId){
+                /**
+                 * @type {Player}
+                 */
+                let player = {
+                    id: playerId,
+                    name: playerName
+                };
+                game.teams[i].players.push(player);
             }
-            mongo.getConnection((err, db)=>{
-                if(err){
-                    return callback(err, null);
-                }
-                db.collection("games", (err, collection)=>{
-                    if(err){
-                        return callback(err, null);
-                    }
-                    let query = {
-                        accessCode: accessCode
-                    };
-                    collection.updateOne(query, {$set: {teams: game.teams}}, (err, result)=>{
-                        if(err){
-                            return callback(err, null);
-                        }
-                        callback(null, result);
-                    });
-                });
-            });
-        });
+        }
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
+        let query = {
+            accessCode: accessCode
+        };
+        let result;
+        try {
+            result = collection.updateOne(query, {$set: {teams: game.teams}});
+        } catch (e) {
+            throw e;
+        }
+        return result;
     }
 };
 

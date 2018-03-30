@@ -5,27 +5,30 @@ let connection = null;
 
 const mongo = {
 
-    createConnection: (callback)=>{
-        mongodb.connect(config.database.url, (err, db)=>{
-            if(err){
-                return callback(err);
-            }
-            connection = db.db();
-            callback(null);
-        });
+    /**
+     * Creates a new connection to the MongoDB database
+     * @return {Promise<undefined>}
+     */
+    async createConnection(){
+        try {
+            const db = await mongodb.connect(config.database.url);
+            connection = db.db("buzzIn");
+        } catch (e) {
+            throw e;
+        }
     },
 
-    getConnection: (callback)=>{
+    async getConnection(){
         if(connection === null){
-            mongo.createConnection((err)=>{
-                if(err){
-                    return callback(err, null);
-                }
-                callback(null, connection);
-            });
+            try {
+                await this.createConnection();
+            } catch (e) {
+                throw e;
+            }
+            return connection;
         }
         else{
-            callback(null, connection);
+            return connection;
         }
     }
 
