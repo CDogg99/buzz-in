@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Buzz In</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/libs/jwt-decode.min.js"></script>
+    <script src="js/libs/js.cookie.js"></script>
+    <script src="js/create.js"></script>
+</head>
+<body>
+    <h1>Buzz In</h1>
+    <div>
+        <span>Number of teams</span>
+        <select id="numTeamsSelector">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select>
+        <span>Enter the team names below</span>
+        <div id="inputs">
+            <input type="text" id="team1" placeholder="Team 1">
+            <input type="text" id="team2" placeholder="Team 2">
+            <input type="text" id="team3" placeholder="Team 3">
+            <input type="text" id="team4" placeholder="Team 4">
+        </div>
+    </div>
+</body>
+</html>

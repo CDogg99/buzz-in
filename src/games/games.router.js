@@ -49,7 +49,8 @@ router.post("/:accessCode", async (req, res)=>{
     }
     let payload = {
         playerId: await util.generateId(16),
-        name: name
+        name: name,
+        accessCode: accessCode
     };
     let options = {
         expiresIn: "24h"
@@ -89,7 +90,8 @@ router.post("/", async (req, res)=>{
      */
     let game = result.ops[0];
     let payload = {
-        gameId: game.id
+        gameId: game.id,
+        accessCode: game.accessCode
     };
     let options = {
         expiresIn: "24h"
