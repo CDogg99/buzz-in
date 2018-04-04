@@ -2,6 +2,7 @@
  * A game
  * @typedef {Object} Game
  * @prop {String} id
+ * @prop {Number} creationDate
  * @prop {String} accessCode Code used to join game
  * @prop {Team[]} teams Array of teams
  * 

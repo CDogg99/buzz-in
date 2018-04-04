@@ -26,6 +26,7 @@ const gamesController = {
          */
         let game = {
             id: await util.generateId(16),
+            creationDate: Date.now(),
             accessCode: await util.generateAccessCode(),
             teams: teams
         };
@@ -56,6 +57,26 @@ const gamesController = {
         let result;
         try {
             result = await collection.findOne(query);
+        } catch (e) {
+            throw e;
+        }
+        return result;
+    },
+
+    /**
+     * Gets all games stored in the database
+     */
+    async getAll(){
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
+        let result;
+        try {
+            result = await collection.find();
         } catch (e) {
             throw e;
         }

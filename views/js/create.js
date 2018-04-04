@@ -1,9 +1,16 @@
-var numTeamsSelector;
+var numTeamsSelector, submitButton, response;
 
 window.onload = function(){
     numTeamsSelector = document.querySelector("#numTeamsSelector");
+    submitButton = document.querySelector("#submitCreateForm");
+    response = document.querySelector("#createFormResponse");
+
     numTeamsSelector.addEventListener("change", function(){
         updateNumInputs(parseInt(this.value));
+    });
+    submitButton.addEventListener("click", function(){
+        response.innerHTML = "";
+        createGame();
     });
 };
 
@@ -17,4 +24,41 @@ function updateNumInputs(num){
         tmp.setAttribute("placeholder", "Team "+i);
         inputs.appendChild(tmp);
     }
+}
+
+function createGame(){
+    var teams = [];
+    for(var i = 1; i <= parseInt(numTeamsSelector.value); i++){
+        var curName = document.querySelector("#team"+i).value;
+        if(!curName){
+            response.innerHTML = "Team name missing";
+            return;
+        }
+        else{
+            teams[i-1] = {name: curName};
+        }
+    }
+    var body = {
+        teams: teams
+    };
+    var headers = new Headers({
+        "Content-Type": "application/json"
+    });
+    var options = {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(body),
+        mode: "cors"
+    };
+    fetch("http://localhost/api/games", options).then(function(res){
+        return res.json();
+    }).then(function(body){
+        if(body.error){
+            response.innerHTML = body.error;
+        }
+        else{
+            Cookies.set("token", body.token, {expires: 1});
+            localStorage.setItem("game", JSON.stringify(body.game));
+        }
+    });
 }

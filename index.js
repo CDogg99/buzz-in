@@ -4,7 +4,8 @@ const cors = require("cors");
 const path = require("path");
 const http = require("http");
 
-const authenticate = require("./src/authenticate");
+const authenticate = require("./src/middleware/authenticate");
+const deleteOldDocs = require("./src/middleware/deleteOldDocs");
 const routers = require("./src/routers");
 const mongo = require("./src/mongo");
 const wsHandler = require("./src/wsHandler");
@@ -15,11 +16,11 @@ const port = process.env.PORT || 80;
 app.use(express.static(path.join(__dirname, "views")));
 app.use(cors());
 app.use(bodyParser.json());
+app.use(deleteOldDocs);
 app.use(authenticate);
 app.use("/api/games", routers.gamesRouter);
 app.use("/", (req, res)=>{
-    //Send back 404 html page later
-    res.status(404).send("HTTP 404");
+    res.status(404).sendFile(path.join(__dirname+"/views/pageNotFound.html"));
 });
 const server = http.createServer(app);
 wsHandler(server);

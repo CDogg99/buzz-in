@@ -58,12 +58,6 @@ router.post("/:accessCode", async (req, res)=>{
     let token = jwt.sign(payload, config.jwt.secret, options);
     game._id = undefined;
     game.id = undefined;
-    for(let i = 0; i < game.teams.length; i++){
-        let curPlayers = game.teams[i].players;
-        for(let f = 0; f < curPlayers.length; f++){
-            curPlayers[f].id = undefined;
-        }
-    }
     return res.json({
         token: token,
         game: game

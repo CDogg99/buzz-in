@@ -32,7 +32,6 @@ function joinGame(){
     fetch("http://localhost/api/games/"+accessCode, options).then(function(res){
         return res.json();
     }).then(function(body){
-        console.log(body);
         if(body.error){
             response.innerHTML = body.error;
         }
