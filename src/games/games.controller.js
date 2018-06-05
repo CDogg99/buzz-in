@@ -28,6 +28,7 @@ const gamesController = {
             id: await util.generateId(16),
             creationDate: Date.now(),
             accessCode: await util.generateAccessCode(),
+            currentQuestionValue: null,
             teams: teams
         };
         let result;
@@ -37,6 +38,47 @@ const gamesController = {
             throw e;
         }
         return result;
+    },
+
+    /**
+     * Updates the game's current question's point value (null if no question being asked)
+     * @param {String} accessCode
+     * @param {Number} value 
+     */
+    async updateCurrentQuestion(accessCode, value){
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
+        let query = {
+            accessCode: accessCode
+        };
+        let result;
+        try {
+            result = collection.updateOne(query, {$set: {currentQuestionValue: value}});
+        } catch (e) {
+            throw(e);
+        }
+        return result;
+    },
+
+    /**
+     * Adds points to a team
+     * @param {String} accessCode
+     * @param {String} teamId
+     * @param {Number} value 
+     */
+    async addPointsToTeam(accessCode,teamId, value){
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
     },
 
     /**

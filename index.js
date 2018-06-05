@@ -7,7 +7,6 @@ const http = require("http");
 const authenticate = require("./src/middleware/authenticate");
 const deleteOldDocs = require("./src/middleware/deleteOldDocs");
 const routers = require("./src/routers");
-const mongo = require("./src/mongo");
 const wsHandler = require("./src/wsHandler");
 
 const app = express();
@@ -22,13 +21,9 @@ app.use("/api/games", routers.gamesRouter);
 app.use("/", (req, res)=>{
     res.status(404).sendFile(path.join(__dirname+"/views/pageNotFound.html"));
 });
+
 const server = http.createServer(app);
 wsHandler(server);
-server.listen(port, async ()=>{
-    try {
-        await mongo.createConnection();
-    } catch (e) {
-        console.log("Failed to connect to MongoDB database");
-    }
+server.listen(port, ()=>{
     console.log("Server running on port " + port);
 });

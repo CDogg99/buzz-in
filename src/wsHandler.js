@@ -1,42 +1,118 @@
-const WebSocket = require("ws");
+let io = require("socket.io");
 const jwt = require("jsonwebtoken");
 
+const gamesController = require("./games/games.controller");
 const config = require("../config/config");
 
-const webSocket = (server)=>{
-    const wss = new WebSocket.Server({ 
-        server: server,
-        verifyClient: (info, callback)=>{
-            const token = info.req.headers.token;
-            if(token){
-                jwt.verify(token, config.jwt.secret, (err, payload)=>{
-                    if(err){
-                        callback(false, 500, "Internal server error occured when verifying token");
-                    }
-                    else if(payload){
-                        info.req.user = payload;
-                        callback(true);
-                    }
-                });
-            }
-            else{
-                callback(false, 401, "Unauthorized");
-            }
+const wsHandler = (server)=>{
+    io = io(server);
+
+    const gamesNsp = io.of("/games");
+
+    gamesNsp.use((socket, next)=>{
+        const token = socket.handshake.query.token;
+        if(token){
+            jwt.verify(token, config.jwt.secret, (err, payload)=>{
+                if(err){
+                    return next(new Error("Not authorized"));
+                }
+                else{
+                    socket.user = payload;
+                    return next();
+                }
+            });
+        }
+        else{
+            return next(new Error("Authorization token not set"));
         }
     });
-    
-    wss.on("connection", (ws, req) => {
-        const user = req.user;
-        ws.on("message", (message) => {
-            console.log('received: %s', message);
-            ws.send(`Hello, you sent -> ${message}`);
+
+    gamesNsp.on("connection", (socket)=>{
+        const user = socket.user;
+
+        if(user.gameId){
+            socket.join(user.accessCode);
+        }
+
+        socket.on("JOIN_GAME", async (teamId)=>{
+            if(!user.playerId){
+                return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+            let result;
+            try {
+                result = await gamesController.movePlayerToTeam(user.accessCode, teamId, user.playerId, user.name);
+            } catch(e) {
+                return socket.send(JSON.stringify({error: e}));
+            }
+            if(result.modifiedCount > 0){
+                socket.user.teamId = teamId;
+                socket.join(user.accessCode);
+                gamesNsp.to(user.accessCode).emit("PLAYER_JOINED", JSON.stringify({
+                    playerId: user.playerId,
+                    teamId: teamId,
+                    name: user.name
+                }));
+                return socket.send(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+            }
+            else{
+                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
+            }
         });
-        ws.send(`Connected as ${user.playerId}`);
-    });
-    
-    wss.on("error", (err)=>{
-        console.log(err.message);
+
+        socket.on("BUZZ_IN", async ()=>{
+            if(!user.playerId || !user.teamId){
+                return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+            let result;
+            try {
+                result = await gamesController.get(user.accessCode);
+            } catch (e) {
+                return socket.send(JSON.stringify({error: e}));
+            }
+            if(result.currentQuestionValue == null){
+                return socket.send(JSON.stringify({error: "No current question"}));
+            }
+            gamesNsp.to(user.accessCode).emit("PLAYER_BUZZED", JSON.stringify({
+                playerId: user.playerId,
+                teamId: user.teamId,
+                name: user.name
+            }));
+        });
+
+        socket.on("BEGIN_QUESTION", async (value)=>{
+            if(!user.gameId){
+                return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+            let result;
+            try {
+                result = await gamesController.updateCurrentQuestion(user.accessCode, value);
+            } catch (e) {
+                return socket.send(JSON.stringify({error: e}));
+            }
+            if(result.modifiedCount > 0){
+                gamesNsp.to(user.accessCode).emit("QUESTION_BEGAN", JSON.stringify({
+                    currentQuestionValue: value
+                }));
+                return socket.send(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+            }
+            else{
+                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
+            }
+        });
+
+        socket.on("CONTINUE_QUESTION", async ()=>{
+            if(!user.gameId){
+                return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+            gamesNsp.to(user.accessCode).emit("CONTINUE_QUESTION");
+        });
+
+        socket.on("END_QUESTION", async ()=>{
+            if(!user.gameId){
+                return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+        });
     });
 };
 
-module.exports = webSocket;
+module.exports = wsHandler;

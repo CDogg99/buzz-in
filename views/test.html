@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WebSocket client test page</title>
+    <script src="js/libs/socket.io.js"></script>
+</head>
+<body>
+    <h1>TEST PAGE</h1>
+    <script>
+        var options = {
+            query: {
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwbGF5ZXJJZCI6InJsMEpaQW1nSGIxbHhVSFAiLCJuYW1lIjoiQ2FtZXJvbiIsImFjY2Vzc0NvZGUiOiJQUDdGUlMiLCJpYXQiOjE1MjQ5ODA5MzAsImV4cCI6MTUyNTA2NzMzMH0.m8y4B0dnGk36K-xcEijnLhO2FvPyr9aE5JSPTD7yTLU"
+            }
+        };
+
+        var socket = io("http://localhost/games", options);
+
+        socket.emit("JOIN_GAME", "aRDExS4mzoKpxXcW", function(data){
+            console.log(data);
+        });
+
+        socket.on("PLAYER_JOINED", function(data){
+            console.log(JSON.parse(data));
+        });
+
+        socket.on("message", function(data){
+            console.log(JSON.parse(data));
+        });
+
+        socket.on("error", function(err){
+            console.log(err);
+        });
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@
  * @prop {String} id
  * @prop {Number} creationDate
  * @prop {String} accessCode Code used to join game
+ * @prop {Number} currentQuestionValue Point value of current question (null if no question being asked)
  * @prop {Team[]} teams Array of teams
  * 
  * A team of players

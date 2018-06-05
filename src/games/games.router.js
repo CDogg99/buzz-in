@@ -7,28 +7,29 @@ const gamesController = require("./games.controller");
 const util = require("../util");
 require("../types");
 
-//Allows player to place themselves in a team
-router.put("/:accessCode/:teamId", async (req, res)=>{
-    if(req.user === null || req.user.gameId){
-        return res.json({error: "Not authorized"});
-    }
+//Gets a game's data
+router.get("/:accessCode", async (req, res)=>{
     let accessCode = req.params.accessCode;
-    let teamId = req.params.teamId;
-    let result;
+    /**
+     * @type {Game}
+     */
+    let game;
     try {
-        result = await gamesController.movePlayerToTeam(accessCode, teamId, req.user.playerId, req.user.name);
+        game = await gamesController.get(accessCode);
     } catch (e) {
         return res.json({error: e.message});
     }
-    if(result.modifiedCount > 0){
-        return res.json({success: true, message: `Updated ${result.modifiedCount} document`});
+    if(!game){
+        return res.json({error: "Game not found"});
     }
-    else{
-        return res.json({error: "Updated 0 documents"});
-    }
+    game._id = undefined;
+    game.id = undefined;
+    return res.json({
+        game: game
+    });
 });
 
-//Allows player to join a game
+//Creates a player token
 router.post("/:accessCode", async (req, res)=>{
     let name = req.body.name;
     if(!name || name === ""){
@@ -56,11 +57,8 @@ router.post("/:accessCode", async (req, res)=>{
         expiresIn: "24h"
     };
     let token = jwt.sign(payload, config.jwt.secret, options);
-    game._id = undefined;
-    game.id = undefined;
     return res.json({
-        token: token,
-        game: game
+        token: token
     });
 });
 
@@ -91,11 +89,8 @@ router.post("/", async (req, res)=>{
         expiresIn: "24h"
     };
     let token = jwt.sign(payload, config.jwt.secret, options);
-    game._id = undefined;
-    game.id = undefined;
     return res.json({
-        token: token,
-        game: game
+        token: token
     });
 });
 

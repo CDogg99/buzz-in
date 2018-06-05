@@ -1,3 +1,14 @@
+var token = Cookies.get("token");
+if(token){
+    var decoded = jwt_decode(token);
+    if(decoded.playerId){
+        window.location.replace("game.html");
+    }
+    else if(decoded.gameId){
+        window.location.replace("host.html");
+    }
+}
+
 var submitButton, response;
 
 window.onload = function(){
@@ -37,7 +48,7 @@ function joinGame(){
         }
         else{
             Cookies.set("token", body.token, {expires: 1});
-            localStorage.setItem("game", JSON.stringify(body.game));
+            window.location.replace("game.html");
         }
     });
 }
