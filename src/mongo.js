@@ -7,7 +7,6 @@ const mongo = {
 
     /**
      * Creates a new connection to the MongoDB database
-     * @return {Promise<undefined>}
      */
     async createConnection(){
         try {

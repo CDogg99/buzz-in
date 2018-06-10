@@ -34,6 +34,10 @@ const wsHandler = (server)=>{
             socket.join(user.accessCode);
         }
 
+        //******************
+        //Player sent events
+        //******************
+
         socket.on("JOIN_GAME", async (teamId)=>{
             if(!user.playerId){
                 return socket.send(JSON.stringify({error: "Not authorized"}));
@@ -79,6 +83,31 @@ const wsHandler = (server)=>{
             }));
         });
 
+        socket.on("LEAVE_GAME", async ()=>{
+            if(!user.playerId || !user.teamId){
+                return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+            let result;
+            try {
+                result = await gamesController.removePlayer(user.accessCode, user.playerId);
+            } catch (e) {
+                throw(e);
+            }
+            if(result.modifiedCount > 0){
+                gamesNsp.to(user.accessCode).emit("PLAYER_LEFT", JSON.stringify({
+                    
+                }));
+                return socket.send(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+            }
+            else{
+                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
+            }
+        });
+
+        //****************
+        //Host sent events
+        //****************
+
         socket.on("BEGIN_QUESTION", async (value)=>{
             if(!user.gameId){
                 return socket.send(JSON.stringify({error: "Not authorized"}));
@@ -107,7 +136,50 @@ const wsHandler = (server)=>{
             gamesNsp.to(user.accessCode).emit("CONTINUE_QUESTION");
         });
 
-        socket.on("END_QUESTION", async ()=>{
+        //If teamId != null, then credit the team the points for the question
+        socket.on("END_QUESTION", async (teamId)=>{
+            if(!user.gameId){
+                return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+            let game;
+            try {
+                game = await gamesController.get(user.accessCode);
+            } catch (e) {
+                return socket.send(JSON.stringify({error: e}));
+            }
+            if(teamId != null){
+                let result;
+                try {
+                    result = await gamesController.addPointsToTeam(user.accessCode, teamId, game.currentQuestionValue);
+                } catch (e) {
+                    return socket.send(JSON.stringify({error: e}));
+                }
+                if(result.modifiedCount > 0){
+                    gamesNsp.to(user.accessCode).emit("POINTS_ADDED", JSON.stringify({
+                        teamId: teamId,
+                        value: game.currentQuestionValue
+                    }));
+                }
+                else{
+                    return socket.send(JSON.stringify({error: "Updated 0 documents"}));
+                }
+            }
+            let results;
+            try {
+                results = await gamesController.updateCurrentQuestion(user.accessCode, null);
+            } catch (e) {
+                return socket.send(JSON.stringify({error: e}));
+            }
+            if(results.modifiedCount > 0){
+                gamesNsp.to(user.accessCode).emit("QUESTION_ENDED");
+                return socket.send(JSON.stringify({success: true, message: `Updated ${results.modifiedCount} document`}));
+            }
+            else{
+                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
+            }
+        });
+
+        socket.on("END_GAME", async ()=>{
             if(!user.gameId){
                 return socket.send(JSON.stringify({error: "Not authorized"}));
             }

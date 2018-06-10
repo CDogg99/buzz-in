@@ -40,6 +40,26 @@ const gamesController = {
         return result;
     },
 
+    async delete(accessCode){
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
+        let query = {
+            accessCode: accessCode
+        };
+        let result;
+        try {
+            result = await collection.deleteOne(query);
+        } catch (e) {
+            throw e;
+        }
+        return result;
+    },
+
     /**
      * Updates the game's current question's point value (null if no question being asked)
      * @param {String} accessCode
@@ -58,7 +78,7 @@ const gamesController = {
         };
         let result;
         try {
-            result = collection.updateOne(query, {$set: {currentQuestionValue: value}});
+            result = await collection.updateOne(query, {$set: {currentQuestionValue: value}});
         } catch (e) {
             throw(e);
         }
@@ -69,9 +89,24 @@ const gamesController = {
      * Adds points to a team
      * @param {String} accessCode
      * @param {String} teamId
-     * @param {Number} value 
+     * @param {Number} value
      */
-    async addPointsToTeam(accessCode,teamId, value){
+    async addPointsToTeam(accessCode, teamId, value){
+        /**
+         * @type {Game}
+         */
+        let game;
+        try {
+            game = await this.get(accessCode);
+        } catch (e) {
+            throw(e);
+        }
+        for(let i = 0; i < game.teams.length; i++){
+            if(game.teams[i].id === teamId){
+                game.teams[i].points += value;
+                break;
+            }
+        }
         let db;
         try {
             db = await mongo.getConnection();
@@ -79,6 +114,16 @@ const gamesController = {
             throw e;
         }
         let collection = db.collection("games");
+        let query = {
+            accessCode: accessCode
+        };
+        let result;
+        try {
+            result = await collection.updateOne(query, {$set: {teams: game.teams}});
+        } catch (e) {
+            throw(e);
+        }
+        return result;
     },
 
     /**
@@ -176,7 +221,52 @@ const gamesController = {
         };
         let result;
         try {
-            result = collection.updateOne(query, {$set: {teams: game.teams}});
+            result = await collection.updateOne(query, {$set: {teams: game.teams}});
+        } catch (e) {
+            throw e;
+        }
+        return result;
+    },
+
+    /**
+     * Removes player from a game
+     * @param {String} accessCode
+     * @param {String} playerId
+     */
+    async removePlayer(accessCode, playerId){
+        /**
+         * @type {Game}
+         */
+        let game;
+        try {
+            game = await this.get(accessCode);
+        } catch (e) {
+            throw(e);
+        }
+        for(let i = 0; i < game.teams.length; i++){
+            for(let f = 0; f < game.teams[i].players.length; f++){
+                /**
+                 * @type {Player}
+                 */
+                let curPlayer = game.teams[i].players[f];
+                if(curPlayer.id == playerId){
+                    game.teams[i].players.splice(f, 1);
+                }
+            }
+        }
+        let db;
+        try {
+            db = await mongo.getConnection();
+        } catch (e) {
+            throw e;
+        }
+        let collection = db.collection("games");
+        let query = {
+            accessCode: accessCode
+        };
+        let result;
+        try {
+            result = await collection.updateOne(query, {$set: {teams: game.teams}});
         } catch (e) {
             throw e;
         }
