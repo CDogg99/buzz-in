@@ -95,7 +95,9 @@ const wsHandler = (server)=>{
             }
             if(result.modifiedCount > 0){
                 gamesNsp.to(user.accessCode).emit("PLAYER_LEFT", JSON.stringify({
-                    
+                    playerId: user.playerId,
+                    teamId: user.teamId,
+                    name: user.name
                 }));
                 return socket.send(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
             }
@@ -182,6 +184,19 @@ const wsHandler = (server)=>{
         socket.on("END_GAME", async ()=>{
             if(!user.gameId){
                 return socket.send(JSON.stringify({error: "Not authorized"}));
+            }
+            let result;
+            try {
+                result = await gamesController.delete(user.accessCode);
+            } catch (e) {
+                return socket.send(JSON.stringify({error: "Failed to delete game"}));
+            }
+            if(result.deletedCount === 1){
+                gamesNsp.to(user.accessCode).emit("GAME_ENDED");
+                return socket.send(JSON.stringify({error: "Successfully deleted game"}));
+            }
+            else{
+                return socket.send(JSON.stringify({error: "Failed to delete game"}));
             }
         });
     });
