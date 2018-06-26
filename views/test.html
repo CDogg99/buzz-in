@@ -9,30 +9,82 @@
 </head>
 <body>
     <h1>TEST PAGE</h1>
+    <div id="teams"></div>
     <script>
-        var options = {
-            query: {
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwbGF5ZXJJZCI6InJsMEpaQW1nSGIxbHhVSFAiLCJuYW1lIjoiQ2FtZXJvbiIsImFjY2Vzc0NvZGUiOiJQUDdGUlMiLCJpYXQiOjE1MjQ5ODA5MzAsImV4cCI6MTUyNTA2NzMzMH0.m8y4B0dnGk36K-xcEijnLhO2FvPyr9aE5JSPTD7yTLU"
-            }
-        };
+        // var options = {
+        //     query: {
+        //         token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwbGF5ZXJJZCI6InJsMEpaQW1nSGIxbHhVSFAiLCJuYW1lIjoiQ2FtZXJvbiIsImFjY2Vzc0NvZGUiOiJQUDdGUlMiLCJpYXQiOjE1MjQ5ODA5MzAsImV4cCI6MTUyNTA2NzMzMH0.m8y4B0dnGk36K-xcEijnLhO2FvPyr9aE5JSPTD7yTLU"
+        //     }
+        // };
 
-        var socket = io("http://localhost/games", options);
+        // var socket = io("http://localhost/games", options);
 
-        socket.emit("JOIN_GAME", "aRDExS4mzoKpxXcW", function(data){
-            console.log(data);
-        });
+        // socket.emit("JOIN_GAME", "aRDExS4mzoKpxXcW", function(data){
+        //     console.log(data);
+        // });
 
-        socket.on("PLAYER_JOINED", function(data){
-            console.log(JSON.parse(data));
-        });
+        // socket.on("PLAYER_JOINED", function(data){
+        //     console.log(JSON.parse(data));
+        // });
 
-        socket.on("message", function(data){
-            console.log(JSON.parse(data));
-        });
+        // socket.on("message", function(data){
+        //     console.log(JSON.parse(data));
+        // });
 
-        socket.on("error", function(err){
-            console.log(err);
-        });
+        // socket.on("error", function(err){
+        //     console.log(err);
+        // });
+        var game = {
+            teams: [
+                {
+                    name: "Kappas",
+                    points: 100,
+                    players: [
+                        "Clay",
+                        "Mamie",
+                        "Noah",
+                        "Katrina"
+                    ]
+                },
+                {
+                    name: "TwitchChat",
+                    points: 200,
+                    players: [
+                        "Kelli",
+                        "Bernice",
+                        "Gina"
+                    ]
+                },
+                {
+                    name: "RandomName",
+                    points: 150,
+                    players: [
+                        "Laurie",
+                        "Yolanda",
+                        "Rosie"
+                    ]
+                },
+                {
+                    name: "Useless",
+                    points: 150,
+                    players: [
+                        "Alyssa",
+                        "Leah",
+                    ]
+                },
+                {
+                    name: "AnotherTeam",
+                    points: 150,
+                    players: [
+                        "Jordan",
+                        "Cora",
+                        "Felipe",
+                        "Faye",
+                        "Alejandro"
+                    ]
+                }
+            ]
+        }
     </script>
 </body>
 </html>

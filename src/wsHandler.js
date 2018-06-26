@@ -29,175 +29,194 @@ const wsHandler = (server)=>{
 
     gamesNsp.on("connection", (socket)=>{
         const user = socket.user;
+        socket.join(user.accessCode);
 
-        if(user.gameId){
-            socket.join(user.accessCode);
-        }
+        socket.on("disconnect", ()=>{
+            //Only send notification of socket disconnect if the player was on a team
+            if(user.playerId && user.teamId){
+                const promise = gamesController.removePlayer(user.accessCode, user.playerId);
+                promise.then((result)=>{
+                    if(result.modifiedCount > 0){
+                        const gamePromise = gamesController.get(user.accessCode);
+                        gamePromise.then((game)=>{
+                            game._id = undefined;
+                            game.id = undefined;
+                            gamesNsp.to(user.accessCode).emit("PLAYER_LEFT", JSON.stringify(game), JSON.stringify({
+                                playerId: user.playerId,
+                                teamId: user.teamId,
+                                name: user.name
+                            }));
+                        });
+                    }
+                });
+            }
+        });
 
         //******************
         //Player sent events
         //******************
 
-        socket.on("JOIN_GAME", async (teamId)=>{
+        socket.on("JOIN_GAME", (teamId, callback)=>{
             if(!user.playerId){
-                return socket.send(JSON.stringify({error: "Not authorized"}));
+                return callback(JSON.stringify({error: "Not authorized"}));
             }
-            let result;
-            try {
-                result = await gamesController.movePlayerToTeam(user.accessCode, teamId, user.playerId, user.name);
-            } catch(e) {
-                return socket.send(JSON.stringify({error: e}));
-            }
-            if(result.modifiedCount > 0){
-                socket.user.teamId = teamId;
-                socket.join(user.accessCode);
-                gamesNsp.to(user.accessCode).emit("PLAYER_JOINED", JSON.stringify({
-                    playerId: user.playerId,
-                    teamId: teamId,
-                    name: user.name
-                }));
-                return socket.send(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
-            }
-            else{
-                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
-            }
+            const promise = gamesController.movePlayerToTeam(user.accessCode, teamId, user.playerId, user.name);
+            promise.then((result)=>{
+                if(result.modifiedCount > 0){
+                    socket.user.teamId = teamId;
+                    const gamePromise = gamesController.get(user.accessCode);
+                    gamePromise.then((game)=>{
+                        game._id = undefined;
+                        game.id = undefined;
+                        gamesNsp.to(user.accessCode).emit("PLAYER_JOINED", JSON.stringify(game), JSON.stringify({
+                            playerId: user.playerId,
+                            teamId: user.teamId,
+                            name: user.name
+                        }));
+                    });
+                    return callback(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+                }
+                else{
+                    return callback(JSON.stringify({error: "Updated 0 documents"}));
+                }
+            }, (err)=>{
+                return callback(JSON.stringify({error: err}));
+            });
         });
 
-        socket.on("BUZZ_IN", async ()=>{
+        socket.on("BUZZ_IN", (callback)=>{
             if(!user.playerId || !user.teamId){
-                return socket.send(JSON.stringify({error: "Not authorized"}));
+                return callback(JSON.stringify({error: "Not authorized"}));
             }
-            let result;
-            try {
-                result = await gamesController.get(user.accessCode);
-            } catch (e) {
-                return socket.send(JSON.stringify({error: e}));
-            }
-            if(result.currentQuestionValue == null){
-                return socket.send(JSON.stringify({error: "No current question"}));
-            }
-            gamesNsp.to(user.accessCode).emit("PLAYER_BUZZED", JSON.stringify({
-                playerId: user.playerId,
-                teamId: user.teamId,
-                name: user.name
-            }));
-        });
-
-        socket.on("LEAVE_GAME", async ()=>{
-            if(!user.playerId || !user.teamId){
-                return socket.send(JSON.stringify({error: "Not authorized"}));
-            }
-            let result;
-            try {
-                result = await gamesController.removePlayer(user.accessCode, user.playerId);
-            } catch (e) {
-                throw(e);
-            }
-            if(result.modifiedCount > 0){
-                gamesNsp.to(user.accessCode).emit("PLAYER_LEFT", JSON.stringify({
+            const gamePromise = gamesController.get(user.accessCode);
+            gamePromise.then((game)=>{
+                if(game.currentQuestionValue == null){
+                    return callback(JSON.stringify({error: "No current question"}));
+                }
+                gamesNsp.to(user.accessCode).emit("PLAYER_BUZZED", JSON.stringify(game), JSON.stringify({
                     playerId: user.playerId,
                     teamId: user.teamId,
                     name: user.name
                 }));
-                return socket.send(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+            }, (err)=>{
+                return callback(JSON.stringify({error: err}));
+            });
+        });
+
+        socket.on("LEAVE_GAME", (callback)=>{
+            if(!user.playerId || !user.teamId){
+                return callback(JSON.stringify({error: "Not authorized"}));
             }
-            else{
-                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
-            }
+            const promise = gamesController.removePlayer(user.accessCode, user.playerId);
+            promise.then((result)=>{
+                if(result.modifiedCount > 0){
+                    const gamePromise = gamesController.get(user.accessCode);
+                    gamePromise.then((game)=>{
+                        game._id = undefined;
+                        game.id = undefined;
+                        gamesNsp.to(user.accessCode).emit("PLAYER_LEFT", JSON.stringify(game), JSON.stringify({
+                            playerId: user.playerId,
+                            teamId: user.teamId,
+                            name: user.name
+                        }));
+                    });
+                    return callback(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+                }
+                else{
+                    return callback(JSON.stringify({error: "Updated 0 documents"}));
+                }
+            }, (err)=>{
+                return callback(JSON.stringify({error: "Failed to remove player from game"}));
+            });
         });
 
         //****************
         //Host sent events
         //****************
 
-        socket.on("BEGIN_QUESTION", async (value)=>{
+        socket.on("BEGIN_QUESTION", (value, callback)=>{
             if(!user.gameId){
-                return socket.send(JSON.stringify({error: "Not authorized"}));
+                return callback(JSON.stringify({error: "Not authorized"}));
             }
-            let result;
-            try {
-                result = await gamesController.updateCurrentQuestion(user.accessCode, value);
-            } catch (e) {
-                return socket.send(JSON.stringify({error: e}));
-            }
-            if(result.modifiedCount > 0){
-                gamesNsp.to(user.accessCode).emit("QUESTION_BEGAN", JSON.stringify({
-                    currentQuestionValue: value
-                }));
-                return socket.send(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
-            }
-            else{
-                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
-            }
+            const promise = gamesController.updateCurrentQuestion(user.accessCode, value);
+            promise.then((result)=>{
+                if(result.modifiedCount > 0){
+                    gamesNsp.to(user.accessCode).emit("QUESTION_BEGAN", JSON.stringify({
+                        currentQuestionValue: value
+                    }));
+                    return callback(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+                }
+                else{
+                    return callback(JSON.stringify({error: "Updated 0 documents"}));
+                }
+            }, (err)=>{
+                return callback(JSON.stringify({error: err}));
+            });
         });
 
-        socket.on("CONTINUE_QUESTION", async ()=>{
+        socket.on("CONTINUE_QUESTION", (callback)=>{
             if(!user.gameId){
-                return socket.send(JSON.stringify({error: "Not authorized"}));
+                return callback(JSON.stringify({error: "Not authorized"}));
             }
             gamesNsp.to(user.accessCode).emit("CONTINUE_QUESTION");
         });
 
         //If teamId != null, then credit the team the points for the question
-        socket.on("END_QUESTION", async (teamId)=>{
+        socket.on("END_QUESTION", (teamId, callback)=>{
             if(!user.gameId){
-                return socket.send(JSON.stringify({error: "Not authorized"}));
+                return callback(JSON.stringify({error: "Not authorized"}));
             }
-            let game;
-            try {
-                game = await gamesController.get(user.accessCode);
-            } catch (e) {
-                return socket.send(JSON.stringify({error: e}));
-            }
-            if(teamId != null){
-                let result;
-                try {
-                    result = await gamesController.addPointsToTeam(user.accessCode, teamId, game.currentQuestionValue);
-                } catch (e) {
-                    return socket.send(JSON.stringify({error: e}));
+            const gamePromise = gamesController.get(user.accessCode);
+            gamePromise.then((game)=>{
+                if(teamId != null){
+                    const addPointsPromise = gamesController.addPointsToTeam(user.accessCode, teamId, game.currentQuestionValue);
+                    addPointsPromise.then((result)=>{
+                        if(result.modifiedCount > 0){
+                            gamesNsp.to(user.accessCode).emit("POINTS_ADDED", JSON.stringify({
+                                teamId: teamId,
+                                value: game.currentQuestionValue
+                            }));
+                        }
+                        else{
+                            return callback(JSON.stringify({error: "Updated 0 documents"}));
+                        }
+                    }, (err)=>{
+                        return callback(JSON.stringify({error: err}));
+                    });
                 }
-                if(result.modifiedCount > 0){
-                    gamesNsp.to(user.accessCode).emit("POINTS_ADDED", JSON.stringify({
-                        teamId: teamId,
-                        value: game.currentQuestionValue
-                    }));
-                }
-                else{
-                    return socket.send(JSON.stringify({error: "Updated 0 documents"}));
-                }
-            }
-            let results;
-            try {
-                results = await gamesController.updateCurrentQuestion(user.accessCode, null);
-            } catch (e) {
-                return socket.send(JSON.stringify({error: e}));
-            }
-            if(results.modifiedCount > 0){
-                gamesNsp.to(user.accessCode).emit("QUESTION_ENDED");
-                return socket.send(JSON.stringify({success: true, message: `Updated ${results.modifiedCount} document`}));
-            }
-            else{
-                return socket.send(JSON.stringify({error: "Updated 0 documents"}));
-            }
+                const updateQuestPromise = gamesController.updateCurrentQuestion(user.accessCode, null);
+                updateQuestPromise.then((results)=>{
+                    if(results.modifiedCount > 0){
+                        gamesNsp.to(user.accessCode).emit("QUESTION_ENDED");
+                        return callback(JSON.stringify({success: true, message: `Updated ${results.modifiedCount} document`}));
+                    }
+                    else{
+                        return callback(JSON.stringify({error: "Updated 0 documents"}));
+                    }
+                }, (err)=>{
+                    return callback(JSON.stringify({error: err}));
+                });
+            }, (err)=>{
+                return callback(JSON.stringify({error: err}));
+            });
         });
 
-        socket.on("END_GAME", async ()=>{
+        socket.on("END_GAME", (callback)=>{
             if(!user.gameId){
-                return socket.send(JSON.stringify({error: "Not authorized"}));
+                return callback(JSON.stringify({error: "Not authorized"}));
             }
-            let result;
-            try {
-                result = await gamesController.delete(user.accessCode);
-            } catch (e) {
-                return socket.send(JSON.stringify({error: "Failed to delete game"}));
-            }
-            if(result.deletedCount === 1){
-                gamesNsp.to(user.accessCode).emit("GAME_ENDED");
-                return socket.send(JSON.stringify({error: "Successfully deleted game"}));
-            }
-            else{
-                return socket.send(JSON.stringify({error: "Failed to delete game"}));
-            }
+            const deletePromise = gamesController.delete(user.accessCode);
+            deletePromise.then((result)=>{
+                if(result.deletedCount === 1){
+                    gamesNsp.to(user.accessCode).emit("GAME_ENDED");
+                    return callback(JSON.stringify({error: "Successfully deleted game"}));
+                }
+                else{
+                    return callback(JSON.stringify({error: "Failed to delete game"}));
+                }
+            }, (err)=>{
+                return callback(JSON.stringify({error: "Failed to delete game"}));
+            });
         });
     });
 };
