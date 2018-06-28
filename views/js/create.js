@@ -1,3 +1,5 @@
+var ip = "localhost";
+
 var token = Cookies.get("token");
 if(token){
     var decoded = jwt_decode(token);
@@ -61,7 +63,7 @@ function createGame(){
         body: JSON.stringify(body),
         mode: "cors"
     };
-    fetch("http://localhost/api/games", options).then(function(res){
+    fetch("http://" + ip + "/api/games", options).then(function(res){
         return res.json();
     }).then(function(body){
         if(body.error){

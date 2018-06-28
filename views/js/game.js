@@ -1,10 +1,12 @@
+var ip = "localhost";
+
 var token = Cookies.get("token");
 if(!token || !jwt_decode(token).playerId){
     window.location.replace("index.html");
 }
 
 var decoded = jwt_decode(token);
-var socket = io("http://localhost/games", {
+var socket = io("http://" + ip + "/games", {
     query: {
         token: token
     }
@@ -78,6 +80,7 @@ window.onload = function(){
     socket.on("QUESTION_ENDED", function(gameData){
         game = JSON.parse(gameData);
         document.querySelector("#buzzInBtn").disabled = "disabled";
+        response.innerHTML = "";
         renderLeaderboard();
         renderTeams();
     });
@@ -201,7 +204,7 @@ function initializeGame(){
         method: "GET",
         mode: "cors"
     };
-    fetch("http://localhost/api/games/"+accessCode, options).then(function(res){
+    fetch("http://" + ip + "/api/games/"+accessCode, options).then(function(res){
         return res.json();
     }).then(function(body){
         if(body.error){
