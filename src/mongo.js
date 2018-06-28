@@ -5,28 +5,26 @@ let connection = null;
 
 const mongo = {
 
-    /**
-     * Creates a new connection to the MongoDB database
-     */
     async createConnection(){
+        let db;
         try {
-            const db = await mongodb.connect(config.database.url);
-            connection = db.db("buzzIn");
+            db = await mongodb.connect(config.database.url);
         } catch (e) {
             throw e;
         }
+        connection = db.db("buzzIn");
     },
 
     async getConnection(){
-        if(connection === null){
+        if(connection !== null){
+            return connection;
+        }
+        else {
             try {
                 await this.createConnection();
             } catch (e) {
                 throw e;
             }
-            return connection;
-        }
-        else{
             return connection;
         }
     }

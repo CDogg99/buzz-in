@@ -14,14 +14,25 @@
 </head>
 <body>
     <h1>Buzz In</h1>
+    <h2 id="accessCode"></h2>
+    <button id="endGameBtn">End game</button>
     <span id="response"></span>
-    <div id="nav">
-        <a href="" onclick="">Teams</a>
-        <a href="" onclick="">Leaderboard</a>
-        <a href="" onclick="">Controls</a>
-    </div>
     <div id="teams"></div>
     <div id="leaderboard"></div>
-    <div id="controls"></div>
+    <div id="controls">
+        <div id="beginQuestionDiv">
+            <span id="beginQuestionRes"></span>
+            <input type="text" id="questionVal" placeholder="Question value">
+            <button id="beginQuestionBtn">Begin question</button>
+        </div>
+        <div id="questionResponseDiv" hidden>
+            <div>
+                <select id="correctAnsSelect"></select>
+                <button id="correctAnsBtn">Correct answer</button>
+            </div>
+            <button id="incorrectAnsBtn">Incorrect answer</button>
+            <button id="endQuestionBtn">End question</button>
+        </div>
+    </div>
 </body>
 </html>

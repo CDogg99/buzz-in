@@ -14,10 +14,11 @@ var hasJoinedTeam = false;
 var game, response;
 
 window.onload = function(){
-    document.querySelector("#welcome").innerHTML = "Welcome, " + decoded.name;
-    document.querySelector("#leaveGameBtn").addEventListener("click", leaveGame);
     response = document.querySelector("#response");
     initializeGame();
+    document.querySelector("#welcome").innerHTML = "Welcome, " + decoded.name;
+    document.querySelector("#leaveGameBtn").addEventListener("click", leaveGame);
+    document.querySelector("#buzzInBtn").addEventListener("click", buzzIn);
 
     socket.on("PLAYER_JOINED", function(gameData, playerData){
         game = JSON.parse(gameData);
@@ -39,32 +40,66 @@ window.onload = function(){
         game = JSON.parse(gameData);
         var player = JSON.parse(playerData);
         console.log(player.name + " buzzed in");
-        //Display player name above buzz in button and disable the button to prevent further buzzes
+        response.innerHTML = player.name + " buzzed in!";
+        document.querySelector("#buzzInBtn").disabled = "disabled";
         renderLeaderboard();
         renderTeams();
     });
+
+    socket.on("QUESTION_BEGAN", function(gameData, questionData){
+        game = JSON.parse(gameData);
+        var question = JSON.parse(questionData);
+        console.log("A " + question.currentQuestionValue + " point question began");
+        response.innerHTML = "A " + question.currentQuestionValue + " point question began";
+        if(document.querySelector("#buzzInBtn").disabled){
+            document.querySelector("#buzzInBtn").removeAttribute("disabled");
+        }
+        renderLeaderboard();
+        renderTeams();
+    });
+
+    socket.on("CONTINUE_QUESTION", function(){
+        if(document.querySelector("#buzzInBtn").disabled){
+            document.querySelector("#buzzInBtn").removeAttribute("disabled");
+        }
+        response.innerHTML = "";
+        console.log("Continue question");
+    });
+
+    socket.on("POINTS_ADDED", function(gameData, pointData){
+        game = JSON.parse(gameData);
+        var points = JSON.parse(pointData);
+        console.log(points);
+        console.log(points.value + " points added to " + points.teamId);
+        renderLeaderboard();
+        renderTeams();
+    });
+
+    socket.on("QUESTION_ENDED", function(gameData){
+        game = JSON.parse(gameData);
+        document.querySelector("#buzzInBtn").disabled = "disabled";
+        renderLeaderboard();
+        renderTeams();
+    });
+
+    socket.on("GAME_ENDED", function(){
+        Cookies.remove("token");
+        window.location.replace("index.html");
+    });
 };
 
-//Also close WS connection and make player leave the game and team
+function buzzIn(){
+    socket.emit("BUZZ_IN", function(data){
+        var res = JSON.parse(data);
+        console.log(res);
+    });
+}
+
 function leaveGame(){
     socket.emit("LEAVE_GAME", function(data){
         Cookies.remove("token");
         window.location.replace("index.html");
     });
-}
-
-function renderGameHUD(){
-    document.querySelector("#gameHUD").innerHTML = "";
-    var button = document.createElement("button");
-    button.id = "buzzInBtn";
-    button.innerHTML = "BUZZ IN";
-    button.addEventListener("click", function(){
-        socket.emit("BUZZ_IN", function(data){
-            var res = JSON.parse(data);
-            console.log(res);
-        });
-    });
-    document.querySelector("#gameHUD").append(button);
 }
 
 function renderTeams(){
@@ -95,7 +130,7 @@ function renderTeams(){
                     var res = JSON.parse(data);
                     if(res.success){
                         hasJoinedTeam = true;
-                        renderGameHUD();
+                        document.querySelector("#buzzInBtn").removeAttribute("hidden");
                     }
                 });
             });

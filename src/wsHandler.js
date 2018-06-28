@@ -48,7 +48,7 @@ const wsHandler = (server)=>{
                             }));
                         });
                     }
-                });
+                }, (err)=>{});
             }
         });
 
@@ -141,10 +141,17 @@ const wsHandler = (server)=>{
             const promise = gamesController.updateCurrentQuestion(user.accessCode, value);
             promise.then((result)=>{
                 if(result.modifiedCount > 0){
-                    gamesNsp.to(user.accessCode).emit("QUESTION_BEGAN", JSON.stringify({
-                        currentQuestionValue: value
-                    }));
-                    return callback(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+                    const gamePromise = gamesController.get(user.accessCode);
+                    gamePromise.then((game)=>{
+                        game._id = undefined;
+                        game.id = undefined;
+                        gamesNsp.to(user.accessCode).emit("QUESTION_BEGAN", JSON.stringify(game), JSON.stringify({
+                            currentQuestionValue: value
+                        }));
+                        return callback(JSON.stringify({success: true, message: `Updated ${result.modifiedCount} document`}));
+                    }, (err)=>{
+                        return callback(JSON.stringify({error: err}));
+                    });
                 }
                 else{
                     return callback(JSON.stringify({error: "Updated 0 documents"}));
@@ -159,6 +166,7 @@ const wsHandler = (server)=>{
                 return callback(JSON.stringify({error: "Not authorized"}));
             }
             gamesNsp.to(user.accessCode).emit("CONTINUE_QUESTION");
+            return callback(JSON.stringify({success: true, message: "Sent question continue message"}));
         });
 
         //If teamId != null, then credit the team the points for the question
@@ -172,10 +180,36 @@ const wsHandler = (server)=>{
                     const addPointsPromise = gamesController.addPointsToTeam(user.accessCode, teamId, game.currentQuestionValue);
                     addPointsPromise.then((result)=>{
                         if(result.modifiedCount > 0){
-                            gamesNsp.to(user.accessCode).emit("POINTS_ADDED", JSON.stringify({
-                                teamId: teamId,
-                                value: game.currentQuestionValue
-                            }));
+                            const gamePromise2 = gamesController.get(user.accessCode);
+                            gamePromise2.then((game2)=>{
+                                game2._id = undefined;
+                                game2.id = undefined;
+                                gamesNsp.to(user.accessCode).emit("POINTS_ADDED", JSON.stringify(game2), JSON.stringify({
+                                    teamId: teamId,
+                                    value: game2.currentQuestionValue
+                                }));
+                                const updateQuestPromise = gamesController.updateCurrentQuestion(user.accessCode, null);
+                                updateQuestPromise.then((results)=>{
+                                    if(results.modifiedCount > 0){
+                                        const gamePromise3 = gamesController.get(user.accessCode);
+                                        gamePromise3.then((game3)=>{
+                                            game3._id = undefined;
+                                            game3.id = undefined;
+                                            gamesNsp.to(user.accessCode).emit("QUESTION_ENDED", JSON.stringify(game3));
+                                            return callback(JSON.stringify({success: true, message: `Updated ${results.modifiedCount} document`}));
+                                        }, (err)=>{
+                                            return callback(JSON.stringify({error: err}));
+                                        });
+                                    }
+                                    else{
+                                        return callback(JSON.stringify({error: "Updated 0 documents"}));
+                                    }
+                                }, (err)=>{
+                                    return callback(JSON.stringify({error: err}));
+                                });
+                            }, (err)=>{
+                                return callback(JSON.stringify({error: err}));
+                            });
                         }
                         else{
                             return callback(JSON.stringify({error: "Updated 0 documents"}));
@@ -184,18 +218,27 @@ const wsHandler = (server)=>{
                         return callback(JSON.stringify({error: err}));
                     });
                 }
-                const updateQuestPromise = gamesController.updateCurrentQuestion(user.accessCode, null);
-                updateQuestPromise.then((results)=>{
-                    if(results.modifiedCount > 0){
-                        gamesNsp.to(user.accessCode).emit("QUESTION_ENDED");
-                        return callback(JSON.stringify({success: true, message: `Updated ${results.modifiedCount} document`}));
-                    }
-                    else{
-                        return callback(JSON.stringify({error: "Updated 0 documents"}));
-                    }
-                }, (err)=>{
-                    return callback(JSON.stringify({error: err}));
-                });
+                else{
+                    const updateQuestPromise = gamesController.updateCurrentQuestion(user.accessCode, null);
+                    updateQuestPromise.then((results)=>{
+                        if(results.modifiedCount > 0){
+                            const gamePromise2 = gamesController.get(user.accessCode);
+                            gamePromise2.then((game2)=>{
+                                game2._id = undefined;
+                                game2.id = undefined;
+                                gamesNsp.to(user.accessCode).emit("QUESTION_ENDED", JSON.stringify(game2));
+                                return callback(JSON.stringify({success: true, message: `Updated ${results.modifiedCount} document`}));
+                            }, (err)=>{
+                                return callback(JSON.stringify({error: err}));
+                            });
+                        }
+                        else{
+                            return callback(JSON.stringify({error: "Updated 0 documents"}));
+                        }
+                    }, (err)=>{
+                        return callback(JSON.stringify({error: err}));
+                    });
+                }
             }, (err)=>{
                 return callback(JSON.stringify({error: err}));
             });
@@ -209,7 +252,7 @@ const wsHandler = (server)=>{
             deletePromise.then((result)=>{
                 if(result.deletedCount === 1){
                     gamesNsp.to(user.accessCode).emit("GAME_ENDED");
-                    return callback(JSON.stringify({error: "Successfully deleted game"}));
+                    return callback(JSON.stringify({success: true, message: "Successfully deleted game"}));
                 }
                 else{
                     return callback(JSON.stringify({error: "Failed to delete game"}));
