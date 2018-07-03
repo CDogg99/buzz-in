@@ -16,7 +16,6 @@ var submitButton, response;
 window.onload = function(){
     submitButton = document.querySelector("#submitJoinForm");
     response = document.querySelector("#joinFormResponse");
-
     submitButton.addEventListener("click", function(){
         response.innerHTML = "";
         joinGame();
