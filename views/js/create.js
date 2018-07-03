@@ -1,54 +1,56 @@
 var ip = "localhost";
 
 var token = Cookies.get("token");
-if(token){
+if (token) {
     var decoded = jwt_decode(token);
-    if(decoded.playerId){
+    if (decoded.playerId) {
         window.location.replace("game.html");
-    }
-    else if(decoded.gameId){
+    } else if (decoded.gameId) {
         window.location.replace("host.html");
     }
 }
 
 var numTeamsSelector, submitButton, response;
 
-window.onload = function(){
+window.onload = function () {
     numTeamsSelector = document.querySelector("#numTeamsSelector");
     submitButton = document.querySelector("#submitCreateForm");
     response = document.querySelector("#createFormResponse");
 
-    numTeamsSelector.addEventListener("change", function(){
+    numTeamsSelector.addEventListener("change", function () {
         updateNumInputs(parseInt(this.value));
     });
-    submitButton.addEventListener("click", function(){
+    submitButton.addEventListener("click", function () {
         response.innerHTML = "";
         createGame();
     });
 };
 
-function updateNumInputs(num){
+function updateNumInputs(num) {
     var inputs = document.querySelector("#inputs");
     inputs.innerHTML = "";
-    for(var i = 1; i <= num; i++){
+    for (var i = 1; i <= num; i++) {
         var tmp = document.createElement("input");
         tmp.setAttribute("type", "text");
-        tmp.setAttribute("id", "team"+i);
-        tmp.setAttribute("placeholder", "Team "+i);
+        tmp.setAttribute("id", "team" + i);
+        var lbl = document.createElement("label");
+        lbl.innerHTML = "Team " + i;
+        inputs.appendChild(lbl);
         inputs.appendChild(tmp);
     }
 }
 
-function createGame(){
+function createGame() {
     var teams = [];
-    for(var i = 1; i <= parseInt(numTeamsSelector.value); i++){
-        var curName = document.querySelector("#team"+i).value;
-        if(!curName){
+    for (var i = 1; i <= parseInt(numTeamsSelector.value); i++) {
+        var curName = document.querySelector("#team" + i).value;
+        if (!curName) {
             response.innerHTML = "Team name missing";
             return;
-        }
-        else{
-            teams[i-1] = {name: curName};
+        } else {
+            teams[i - 1] = {
+                name: curName
+            };
         }
     }
     var body = {
@@ -63,14 +65,15 @@ function createGame(){
         body: JSON.stringify(body),
         mode: "cors"
     };
-    fetch("http://" + ip + "/api/games", options).then(function(res){
+    fetch("http://" + ip + "/api/games", options).then(function (res) {
         return res.json();
-    }).then(function(body){
-        if(body.error){
+    }).then(function (body) {
+        if (body.error) {
             response.innerHTML = body.error;
-        }
-        else{
-            Cookies.set("token", body.token, {expires: 1});
+        } else {
+            Cookies.set("token", body.token, {
+                expires: 1
+            });
             window.location.replace("host.html");
         }
     });

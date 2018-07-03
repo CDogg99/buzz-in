@@ -78,10 +78,22 @@ label{
     align-self: flex-start;
 }
 
+select{
+    background-color: #F3A712;
+    color:white;
+    outline: none;
+    border: none;
+    padding: 2px 7px;
+    margin:2px 0;
+    font-size: 80%;
+    border-radius: 10px;
+}
+
 .big-button{
     font-size: 175%;
     border: none;
     text-align: center;
+    min-height: 50px;
     background: #DB2B39;
     border-radius: 10px;
     padding: 5px;
