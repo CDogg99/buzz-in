@@ -37,6 +37,13 @@ h3{
     height: 32px;
 }
 
+#accessCode{
+    font-weight: 400;
+    font-size: 200%;
+    margin: 10px 0;
+    color:#DB2B39;
+}
+
 
 .form{
     display: flex;
@@ -60,7 +67,11 @@ a:active{
     color:inherit;
 }
 
-input[type=text]{
+.team-name{
+    font-family: "Wendy One";
+}
+
+input[type=text], input[type=number]{
     font-size: 175%;
     font-family: "Roboto";
     font-weight: 300;
@@ -89,7 +100,7 @@ select{
     border-radius: 10px;
 }
 
-.big-button{
+.base-button{
     font-size: 175%;
     border: none;
     text-align: center;
@@ -101,13 +112,20 @@ select{
     font-weight: 400;
     color:white !important;
     width: calc(100% - 10px);
+    max-width: 500px;
     border:2px solid white;
     box-shadow:  0px 1px 5px 0px rgba(0, 0, 0, 0.2),
     0px 2px 2px 0px rgba(0, 0, 0, 0.14),
     0px 3px 1px -2px rgba(0, 0, 0, 0.12);
 }
 
-.big-button:hover{
+.small-button{
+    font-size: 125%;
+    max-width: 200px;
+    padding: 3px;
+}
+
+.base-button:hover{
     box-shadow:0px 1px 8px 0px rgba(0, 0, 0, 0.2),
     0px 3px 4px 0px rgba(0, 0, 0, 0.14),
     0px 3px 3px -2px rgba(0, 0, 0, 0.12);

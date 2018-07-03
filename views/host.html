@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Host</title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Wendy+One" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="js/libs/socket.io.js"></script>
     <script src="js/libs/jwt-decode.min.js"></script>
@@ -13,25 +14,28 @@
     <script src="js/host.js"></script>
 </head>
 <body>
-    <h1>Buzz In</h1>
-    <h2 id="accessCode"></h2>
-    <button id="endGameBtn">End game</button>
-    <span id="response"></span>
-    <div id="teams"></div>
-    <div id="leaderboard"></div>
-    <div id="controls">
-        <div id="beginQuestionDiv">
-            <span id="beginQuestionRes"></span>
-            <input type="text" id="questionVal" placeholder="Question value">
-            <button id="beginQuestionBtn">Begin question</button>
-        </div>
-        <div id="questionResponseDiv" hidden>
-            <div>
-                <select id="correctAnsSelect"></select>
-                <button id="correctAnsBtn">Correct answer</button>
+    <div class="viewport">
+        <h1>Buzz In</h1>
+        <h2 id="accessCode"></h2>
+        <button id="endGameBtn" class="base-button small-button">End game</button>
+        <span id="response"></span>
+        <div id="teams"></div>
+        <div id="leaderboard"></div>
+        <div id="controls" class="form">
+            <div id="beginQuestionDiv" class="form">
+                <span id="beginQuestionRes"></span>
+                <label>Question Value</label>
+                <input type="number" id="questionVal">
+                <button id="beginQuestionBtn" class="base-button small-button">Begin question</button>
             </div>
-            <button id="incorrectAnsBtn">Incorrect answer</button>
-            <button id="endQuestionBtn">End question</button>
+            <div id="questionResponseDiv" hidden>
+                <div>
+                    <select id="correctAnsSelect"></select>
+                    <button id="correctAnsBtn" class="base-button small-button">Correct answer</button>
+                </div>
+                <button id="incorrectAnsBtn" class="base-button small-button">Incorrect answer</button>
+                <button id="endQuestionBtn" class="base-button small-button">End question</button>
+            </div>
         </div>
     </div>
 </body>
