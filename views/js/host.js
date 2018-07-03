@@ -28,7 +28,6 @@ window.onload = function(){
         game = JSON.parse(gameData);
         var player = JSON.parse(playerData);
         console.log(player.name + " joined the game");
-        renderLeaderboard();
         renderTeams();
     });
 
@@ -36,7 +35,6 @@ window.onload = function(){
         game = JSON.parse(gameData);
         var player = JSON.parse(playerData);
         console.log(player.name + " left the game");
-        renderLeaderboard();
         renderTeams();
     });
 
@@ -45,15 +43,13 @@ window.onload = function(){
         var player = JSON.parse(playerData);
         console.log(player.name + " buzzed in");
         response.innerHTML = player.name + " buzzed in!";
-        renderLeaderboard();
         renderTeams();
     });
 
     socket.on("QUESTION_BEGAN", function(gameData, questionData){
         game = JSON.parse(gameData);
         var question = JSON.parse(questionData);
-        console.log("A " + question.currentQuestionValue + " point question began");
-        renderLeaderboard();
+        console.log(question.currentQuestionValue + " point question began");
         renderTeams();
     });
 
@@ -66,13 +62,11 @@ window.onload = function(){
         var points = JSON.parse(pointData);
         console.log(points);
         console.log(points.value + " points added to " + points.teamId);
-        renderLeaderboard();
         renderTeams();
     });
 
     socket.on("QUESTION_ENDED", function(gameData){
         game = JSON.parse(gameData);
-        renderLeaderboard();
         renderTeams();
     });
 };
@@ -145,6 +139,11 @@ function renderTeams(){
     document.querySelector("#teams").innerHTML = "";
     document.querySelector("#correctAnsSelect").innerHTML = "";
     var teams = game.teams;
+    teams.sort(function(a, b){
+        return b.points - a.points;
+    });
+    var curRank = 1;
+    var numSkips = 1;
     for(var i = 0; i < teams.length; i++){
         var curTeam = teams[i];
         var teamDiv = document.createElement("div");
@@ -158,6 +157,22 @@ function renderTeams(){
             playersUL.append(nameLI);
         }
         teamDiv.append(nameH2);
+        var rankH2 = document.createElement("h2");
+        if(i == 0){
+            rankH2.innerHTML = "#" + curRank + " - " + curTeam.points + " points";
+        }
+        else{
+            var prevPoints = teams[i-1].points;
+            if(prevPoints != curTeam.points){
+                curRank += numSkips;
+                numSkips = 1;
+            }
+            else{
+                numSkips++;
+            }
+            rankH2.innerHTML = "#" + curRank + " - " + curTeam.points + " points";
+        }
+        teamDiv.append(rankH2);
         teamDiv.append(playersUL);
         document.querySelector("#teams").append(teamDiv);
         //Append teams to selector in question response segment
@@ -169,60 +184,6 @@ function renderTeams(){
         }
         document.querySelector("#correctAnsSelect").append(opt);
     }
-}
-
-function renderLeaderboard(){
-    document.querySelector("#leaderboard").innerHTML = "";
-    var teams = game.teams;
-    teams.sort(function(a, b){
-        return b.points - a.points;
-    });
-    var table = document.createElement("table");
-    var thead = document.createElement("thead");
-    var trHead = document.createElement("tr");
-    var rank = document.createElement("th");
-    rank.innerHTML = "#";
-    var team = document.createElement("th");
-    team.innerHTML = "Team";
-    var points = document.createElement("th");
-    points.innerHTML = "Points";
-    trHead.append(rank);
-    trHead.append(team);
-    trHead.append(points);
-    thead.append(trHead);
-    table.append(thead);
-    var tbody = document.createElement("tbody");
-    var curRank = 1;
-    var numSkips = 1;
-    for(var i = 0; i < teams.length; i++){
-        var curTeam = teams[i];
-        var tr = document.createElement("tr");
-        var rankTd = document.createElement("td");
-        if(i == 0){
-            rankTd.innerHTML = curRank;
-        }
-        else{
-            var prevPoints = teams[i-1].points;
-            if(prevPoints != curTeam.points){
-                curRank += numSkips;
-                numSkips = 1;
-            }
-            else{
-                numSkips++;
-            }
-            rankTd.innerHTML = curRank;
-        }
-        var nameTd = document.createElement("td");
-        nameTd.innerHTML = curTeam.name;
-        var pointsTd = document.createElement("td");
-        pointsTd.innerHTML = curTeam.points;
-        tr.append(rankTd);
-        tr.append(nameTd);
-        tr.append(pointsTd);
-        tbody.append(tr);
-    }
-    table.append(tbody);
-    document.querySelector("#leaderboard").append(table);
 }
 
 function renderControls(){
@@ -250,7 +211,6 @@ function initializeGame(){
         }
         else{
             game = body.game;
-            renderLeaderboard();
             renderTeams();
             renderControls();
         }
