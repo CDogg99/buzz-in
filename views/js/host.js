@@ -12,6 +12,14 @@ var socket = io("http://" + ip + "/games", {
     }
 });
 
+function create(type,id,className,content){
+    var element=document.createElement(type);
+    element.id=id;
+    element.className=className;
+    element.innerHTML=content;
+    return element;
+}
+
 var game, response;
 
 window.onload = function(){
@@ -146,9 +154,8 @@ function renderTeams(){
     var numSkips = 1;
     for(var i = 0; i < teams.length; i++){
         var curTeam = teams[i];
-        var teamDiv = document.createElement("div");
-        var nameH2 = document.createElement("h2");
-        nameH2.innerHTML = curTeam.name;
+        var teamDiv = create("div","","team","");
+        var nameH2 = create("h2","","team-info","");
         var playersUL = document.createElement("ul");
         for(var f = 0; f < curTeam.players.length; f++){
             var curPlayer = curTeam.players[f].name;
@@ -156,12 +163,7 @@ function renderTeams(){
             nameLI.innerHTML = curPlayer;
             playersUL.append(nameLI);
         }
-        teamDiv.append(nameH2);
-        var rankH2 = document.createElement("h2");
-        if(i == 0){
-            rankH2.innerHTML = "#" + curRank + " - " + curTeam.points + " points";
-        }
-        else{
+        if(i!=0){
             var prevPoints = teams[i-1].points;
             if(prevPoints != curTeam.points){
                 curRank += numSkips;
@@ -170,9 +172,12 @@ function renderTeams(){
             else{
                 numSkips++;
             }
-            rankH2.innerHTML = "#" + curRank + " - " + curTeam.points + " points";
         }
-        teamDiv.append(rankH2);
+        var coloredRank=curRank==1? "first":curRank==2? "second": curRank==3? "third":"";
+        nameH2.append(create("div","","rank "+coloredRank,"#"+curRank));
+        nameH2.append(create("span","","team-name",curTeam.name));
+        nameH2.append(create("div","","score",curTeam.points));
+        teamDiv.append(nameH2);
         teamDiv.append(playersUL);
         document.querySelector("#teams").append(teamDiv);
         //Append teams to selector in question response segment
