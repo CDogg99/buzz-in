@@ -115,10 +115,44 @@ select{
     0px 3px 1px -2px rgba(0, 0, 0, 0.12);
 }
 
+#gameHUD{
+    min-width: 300px;
+    text-align: center;
+}
+
 .small-button{
     font-size: 125%;
     max-width: 200px;
     padding: 3px;
+    margin: 5px 0;
+}
+
+.icon-button{
+    font-size: 75%;
+    min-height: 0;
+    padding: 2px;
+    min-width: 0;
+    border-radius: 50%;
+    width: 10%;
+    text-align: center;
+}
+
+.base-button[disabled]{
+    background: #efa0a7;
+}
+
+.base-button[disabled]:hover{
+    box-shadow:  0px 1px 5px 0px rgba(0, 0, 0, 0.2),
+    0px 2px 2px 0px rgba(0, 0, 0, 0.14),
+    0px 3px 1px -2px rgba(0, 0, 0, 0.12);
+    cursor: default;
+}
+
+.tiny-button{
+    font-size: 80%;
+    max-width: 100px;
+    padding: 2px;
+    min-height: 0px;
 }
 
 .base-button:hover{
@@ -149,6 +183,7 @@ select{
     justify-content: space-between;
     background: #DB2B39;
     margin: 0;
+    position: relative;
 }
 
 .rank, .score{
