@@ -147,7 +147,7 @@ function renderTeams(){
             var joinBtn = document.createElement("button");
             joinBtn.setAttribute("class", "teamSelectBtn base-button icon-button");
             joinBtn.setAttribute("data-team-id", curTeam.id);
-            joinBtn.innerHTML = "J";
+            joinBtn.append(create("i","","material-icons","add"));
             joinBtn.addEventListener("click", function(){
                 var teamId = this.getAttribute("data-team-id");
                 socket.emit("JOIN_GAME", teamId, function(data){

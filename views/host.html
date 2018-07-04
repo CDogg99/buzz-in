@@ -7,6 +7,7 @@
     <title>Host</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Wendy+One" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="js/libs/socket.io.js"></script>
     <script src="js/libs/jwt-decode.min.js"></script>
@@ -22,18 +23,18 @@
             <div id="beginQuestionDiv" class="form">
                 <span id="beginQuestionRes"></span>
                 <label>Question Value</label>
+                <div class="joint-field">
                 <input type="number" id="questionVal">
                 <button id="beginQuestionBtn" class="base-button small-button">Begin question</button>
+                </div>
             </div>
             <div id="questionResponseDiv" hidden>
-                <div>
+                <div id="host-action">
                     <select id="correctAnsSelect"></select>
-                    <button id="correctAnsBtn" class="base-button small-button">Correct answer</button>
+                    <button id="correctAnsBtn" class="base-button icon-button"><i class="material-icons">check</i></button>
+                    <button id="incorrectAnsBtn" class="base-button icon-button"><i class="material-icons">close</i></button>
                 </div>
-                <div>
-                <button id="incorrectAnsBtn" class="base-button small-button">Incorrect answer</button>
                 <button id="endQuestionBtn" class="base-button small-button">End question</button>
-                </div>
             </div>
         </div>
         <div id="teams"></div>
