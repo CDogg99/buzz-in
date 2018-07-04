@@ -75,6 +75,7 @@ window.onload = function(){
 
     socket.on("QUESTION_ENDED", function(gameData){
         game = JSON.parse(gameData);
+        response.innerHTML = "";
         renderTeams();
     });
 };
