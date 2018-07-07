@@ -39,7 +39,7 @@ h3{
 
 #accessCode{
     font-weight: 400;
-    font-size: 200%;
+    font-size: 175%;
     margin: 10px 0;
     color:#DB2B39;
 }
@@ -299,4 +299,77 @@ li:nth-child(2n){
     text-align: right;
     color:white;
     font-family: monospace;
+}
+
+#inputs{
+    margin: 0 50px;
+}
+
+@media only screen and (max-width: 1000px) {
+    .desktop-only{
+        display: none;
+    }
+    
+    h1{
+        font-size: 3.5em;
+    }
+    
+    body{
+        padding: 1em;
+        height: calc(100% - 2em);
+    }
+    
+    input[type=text], #accessCode{
+        font-size: 1.618em;
+    }
+    
+    .base-button{
+        font-size: 1.618em;
+        min-height: 0;
+    }
+    
+    .form{
+        min-width: 0;
+    }
+    
+    .viewport{
+        width: 100%;
+        position: relative;
+        margin: 0;
+        min-height: calc(100% - 2em);
+    }
+    
+    #teams{
+        padding: 0 2%;
+        width: 100%;
+    }
+    
+    .rank{
+        padding: 5px;
+    }
+    
+    .team{
+        min-width: 0;
+        flex-grow: 1;
+        margin: 5px 4px;
+    }
+    
+    .icon-button{
+        font-size: .75em;
+    }
+    
+    .score{
+        
+    }
+    
+    .team-name{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .team-info{
+        width: 100%;
+        font-size: 1.5em;
+    }
 }
