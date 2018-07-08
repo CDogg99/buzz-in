@@ -349,7 +349,7 @@ li:nth-child(2n){
     }
     
     .team{
-        min-width: 0;
+        min-width: 90%;
         flex-grow: 1;
         margin: 5px 4px;
     }
