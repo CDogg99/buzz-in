@@ -4,8 +4,8 @@ A small web application which allows teams to buzz in for questions
 1. Download and install [Node.js](https://nodejs.org/en/) and [MongoDB](https://www.mongodb.com/). Node.js version 10.6 and MongoDB version 3.6.5 are recommended.
 2. Clone this repository 
 ```
-git clone https://github.com/CDogg99/thscs-contest-site.git
-cd thscs-contest-site
+git clone https://github.com/CDogg99/buzz-in.git
+cd buzz-in
 ```
 3. Install dependencies
 ```
